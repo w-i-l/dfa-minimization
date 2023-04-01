@@ -37,6 +37,9 @@ class Node:
     def __repr__(self):
         return f"q{self.number}"
 
+    def __lt__(self, other):
+        return self.number < other.number
+
 class FA:
 
     def __init__(self):
@@ -98,7 +101,11 @@ class DFA(FA):
             current_letter = word.pop(0)
 
             # get the next node
-            self.current_state = self.nodes[self.current_state].next(current_letter)[0]
+            try:
+                self.current_state = self.nodes[self.current_state].next(current_letter)[0]
+            except Exception:
+                print(self.current_state)
+
 
             # check to see if we have an invalid state
             if self.current_state == -1:
@@ -117,6 +124,7 @@ class DFA(FA):
             return 'accepted'
         else:
             print("not accepted")
+            print(word, self.current_state)
             return 'not accepted'
     
     def _same_subset(self, equivalnce, node1, node2):
@@ -131,7 +139,8 @@ class DFA(FA):
                 or (next1 in subset and next2 not in subset):
                     node = node1 if node1 not in subset else node2
 
-                    return False
+                    return node1 if next1 not in subset else node2
+                    # return False
         
         return True
     
@@ -144,7 +153,7 @@ class DFA(FA):
             # it won't fit with any
             other = subset[0]
 
-            if self._same_subset(equivalance, node, other):
+            if self._same_subset(equivalance, node, other) == True:
                 subset.append(node)
                 return
         # if we couldn't add to any subset
@@ -168,21 +177,60 @@ class DFA(FA):
                 for index, node1 in enumerate(subset):
                     for node2 in subset[min(index + 1, len(subset)-1):]:
 
-                        if self._same_subset(equivalence, node1, node2) == True:
+                        result = self._same_subset(equivalence, node1, node2)
+                        if result == True:
                             continue
 
                         else:
-                            node = node1 if node1 not in subset else node2
+                            # node = node1 if node1 not in subset else node2
+                            node = result
                             try:
                                 subset.remove(node)
                             except Exception:
-                                print("ERROR!",subset, node)
+                                # print("ERROR!",subset, node)
+                                pass
 
                             self._add_to_equivalence(equivalence, node)
-                        print(equivalence)
-                        
         print(equivalence)
+                            
+        # print(equivalence)
+        # return list(map(lambda x: sorted(x), equivalence))
         return equivalence
 
     def write_to_file(self, filename, equivalence):
-        pass
+        
+        dict = {}
+
+        for subset in equivalence:
+            for letter in self.alphabet:
+                try:
+                    dict["".join(map(lambda x: str(x),subset))][letter].add(self.transition_table[node])
+                except Exception:
+                    dict["".join(map(lambda x: str(x),subset))] = {letter : set() for letter in self.alphabet}
+
+        for node in self.transition_table:
+            for letter in self.alphabet:
+                n = [key for key in dict if str(node) in key][0]
+                dict[n][letter].add(self.transition_table[node][letter][0])
+        
+        print(dict)
+
+        # with open(filename, 'w') as f:
+        #     for node in dict:
+
+        #         final = False
+        #         for letter in node.replace('q', ''):
+        #             if self.nodes[int(letter)].final:
+        #                 final = True
+
+        #         f.write(f"{node.replace('q', '')} {'f' if final else 'n'} ")
+        #         for letter in self.alphabet:
+        #                 try:
+        #                     n = str(list(dict[node][letter])[0])
+        #                     # print(n, [key for key in dict])
+        #                     n = [key for key in dict if n in key][0]
+        #                     f.write(f"{n.replace('q', '')} {letter} ")
+        #                 except:
+        #                     f.write(f"{-1} {letter} ")
+        #         f.write("\n")
+
