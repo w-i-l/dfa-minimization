@@ -131,19 +131,34 @@ class DFA(FA):
 
         for letter in self.alphabet:
 
+            if node1.next(letter)[0] == -1 and node2.next(letter)[0] != -1:
+                return node1
+            elif node2.next(letter)[0] == -1 and node1.next(letter)[0] != -1:
+                return  node2
+            
+            # print("Nodes: ", node1, node2)
+            # print("Next:  ",node1.next(letter)[0], " ", node2.next(letter)[0])
+
             next1 = self.nodes[node1.next(letter)[0]]
             next2 = self.nodes[node2.next(letter)[0]]
 
             for subset in equivalnce:
-                if (next1 not in subset and next2 in subset) \
-                or (next1 in subset and next2 not in subset):
-                    node = node1 if node1 not in subset else node2
+                if (next1 not in subset and next2 in subset):
+                    print("letter", letter, "node", node1, node2, "next", next1, next2)
+                    # print("Leter: ", letter)
+                    return node1
+                
+                elif (next1 in subset and next2 not in subset):
+                    print("letter", letter, "node", node1, node2, "next", next1, next2)
+                    # print("Leter: ", letter)
+                    return node2
 
-                    return node1 if next1 not in subset else node2
+                    # return node1 if next1 not in subset else node2
                     # return False
         
-        return True
+        return None
     
+
     def _add_to_equivalence(self, equivalance, node):
 
         for subset in equivalance:
@@ -153,15 +168,18 @@ class DFA(FA):
             # it won't fit with any
             other = subset[0]
 
-            if self._same_subset(equivalance, node, other) == True:
+            if self._same_subset(equivalance, node, other) == None and node.final == other.final:
                 subset.append(node)
                 return
+            
         # if we couldn't add to any subset
         equivalance.append([node])
+
 
     def minimization(self, equivalence=None):
 
         from copy import deepcopy
+
         
         if equivalence == None:
             # initialization with the non final states
@@ -177,8 +195,9 @@ class DFA(FA):
                 for index, node1 in enumerate(subset):
                     for node2 in subset[min(index + 1, len(subset)-1):]:
 
+                        # print(node1, node2)
                         result = self._same_subset(equivalence, node1, node2)
-                        if result == True:
+                        if result == None:
                             continue
 
                         else:
@@ -189,13 +208,14 @@ class DFA(FA):
                             except Exception:
                                 # print("ERROR!",subset, node)
                                 pass
-
                             self._add_to_equivalence(equivalence, node)
+                            
+                            # print(node, equivalence)
         print(equivalence)
                             
         # print(equivalence)
         # return list(map(lambda x: sorted(x), equivalence))
-        return equivalence
+        return list(map(lambda x: list(set(x)), equivalence))
 
     def write_to_file(self, filename, equivalence):
         
