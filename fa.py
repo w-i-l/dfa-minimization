@@ -254,11 +254,30 @@ class DFA(FA):
         return sorted(copy)
     
 
+    # we reindex the nodes based on the position
+    # in equivalence
     def write_to_file(self, filename, equivalence):
         
-       f = open(filename, "w")
+        f = open(filename, "w")
 
+        for index, subset in enumerate(equivalence):
+            
+            f.write(f"{index} {'f' if subset[0].final else 'n'}")
+            
+            for letter in self.alphabet:
+                
+                # next node
+                next = self.nodes[subset[0].next(letter)[0]]
+
+                # next subset 
+                sub = [x for x in equivalence if next in x][0]
+                # the index of the next subset that
+                # we go to with the letter
+                id = equivalence.index(sub)
+
+                f.write(f" {id} {letter}")
+
+            f.write("\n")
         
-
-       f.close()
+        f.close()
 
