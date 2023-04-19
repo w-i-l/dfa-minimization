@@ -265,19 +265,21 @@ class DFA(FA):
             f.write(f"{index} {'f' if subset[0].final else 'n'}")
             
             for letter in self.alphabet:
-                
-                # next node
-                next = self.nodes[subset[0].next(letter)[0]]
 
-                # next subset 
-                sub = [x for x in equivalence if next in x][0]
-                # the index of the next subset that
-                # we go to with the letter
-                id = equivalence.index(sub)
+                # check for the abort state                
+                if subset[0].next(letter)[0] != -1:
 
-                f.write(f" {id} {letter}")
+                    # next node
+                    next = self.nodes[subset[0].next(letter)[0]]
+
+                    # next subset 
+                    sub = [x for x in equivalence if next in x][0]
+                    # the index of the next subset that
+                    # we go to with the letter
+                    id = equivalence.index(sub)
+
+                    f.write(f" {id} {letter}")
 
             f.write("\n")
         
         f.close()
-
